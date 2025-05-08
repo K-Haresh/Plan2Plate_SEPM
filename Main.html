@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #eee;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background: #4a90e2;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 5px 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        textarea {
+            min-height: 100px;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 5px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        .debug-button {
+            background: #f44336;
+        }
+        .debug-button:hover {
+            background: #d32f2f;
+        }
+        .recipe-preview {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .search-results {
+            margin-top: 15px;
+        }
+        .recipe-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        .recipe-card h3 {
+            margin-top: 0;
+            color: #4a90e2;
+        }
+        .share-button {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .share-button:hover {
+            background: #128C7E;
+        }
+        .site-link {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .recommendations {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .recommendation-item {
+            padding: 8px;
+            background: #f9f9f9;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .recommendation-item:hover {
+            background: #e9e9e9;
+        }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #ddd;
+            border-top: none;
+            z-index: 99;
+            width: calc(100% - 40px);
+            background: white;
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+        .success-message {
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .share-option-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+        .share-option-button:hover {
+            background: #357ae8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recipe Manager</h1>
+
+        <div class="tabs">
+            <div class="tab active" onclick="openTab(event, 'add-recipe')">Add Recipe</div>
+            <div class="tab" onclick="openTab(event, 'share-recipe')">Share Recipe</div>
+            <div class="tab" onclick="openTab(event, 'view-recipes')">View All Recipes</div>
+        </div>
+
+        <!-- Add Recipe Tab -->
+        <div id="add-recipe" class="tab-content active">
+            <h2>Add New Recipe</h2>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" placeholder="Recipe title">
+            </div>
+
+            <div class="form-group">
+                <label for="ingredients">Ingredients (comma separated):</label>
+                <textarea id="ingredients" placeholder="e.g. 2 eggs, 1 cup flour, 1/2 tsp salt"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="directions">Directions:</label>
+                <textarea id="directions" placeholder="Step-by-step cooking instructions"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="link">Link (optional):</label>
+                <input type="text" id="link" placeholder="URL to original recipe">
+            </div>
+
+            <div class="form-group">
+                <label for="site">Source Website:</label>
+                <input type="text" id="site" placeholder="e.g. AllRecipes, Food Network">
+            </div>
+
+            <button onclick="addRecipe()">Save Recipe</button>
+            <button onclick="saveToExcel()">Save to Excel</button>
+            <div id="success-add" class="success-message">Recipe added successfully!</div>
+
+            <div class="recipe-preview">
+                <h3>Preview</h3>
+                <div id="preview-content">
+                    <p><em>Recipe preview will appear here as you type...</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Recipe Tab -->
+        <div id="share-recipe" class="tab-content">
+            <h2>Share Recipe</h2>
+            <div class="form-group">
+                <label for="search-recipe">Search Recipe:</label>
+                <div style="position: relative;">
+                    <input type="text" id="search-recipe" placeholder="Start typing recipe name..." oninput="searchRecipes(this.value)">
+                    <div id="autocomplete-list" class="autocomplete-items"></div>
+                </div>
+            </div>
+
+            <div class="search-results" id="search-results">
+                <!-- Search results will appear here -->
+                <p><em>Search for a recipe to view sharing options...</em></p>
+            </div>
+
+            <div class="recommendations" id="recommendations">
+                <h3>Recommended Recipes</h3>
+                <div id="recommendation-list">
+                    <p><em>Recommendations will appear here...</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View All Recipes Tab -->
+        <div id="view-recipes" class="tab-content">
+            <h2>All Recipes</h2>
+            <div class="button-container">
+                <button onclick="loadAllRecipes()">Refresh List</button>
+                <button onclick="importExcelClick()">Import from Excel</button>
+                <button onclick="debugDatabase()" class="debug-button">Debug Database</button>
+            </div>
+            <div id="all-recipes" class="search-results">
+                <!-- All recipes will be listed here -->
+                <p><em>Click Refresh List to view all recipes...</em></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database management
+        let recipeDatabase = [];
+        const DB_KEY = 'recipeManagerDB';
+
+        // Sample recipes for testing and fallback
+        const SAMPLE_RECIPES = [
+            {
+                id: "1744835253637",
+                title: "Simple Dosa",
+                ingredients: ["2 cups rice flour", "1 cup water", "1/2 tsp salt"],
+                directions: "Mix ingredients, let ferment overnight. Cook on hot griddle.",
+                link: "https://hello.nm",
+                site: "bbb.vom",
+                ner: ["flour", "cook"],
+                date: new Date().toISOString()
+            },
+            {
+                id: "1744835599015",
+                title: "Classic Dosa",
+                ingredients: ["2 cups rice flour", "1 cup urad dal", "water", "salt"],
+                directions: "Soak rice and dal, grind, ferment, cook on hot griddle.",
+                link: "https://h.com",
+                site: "h.com",
+                ner: ["flour", "cook"],
+                date: new Date().toISOString()
+            }
+        ];
+
+        // Excel configuration
+        const EXCEL_FILENAME = 'recipes_data.xlsx'; // Simplified path
+
+        // Load database from localStorage on page load with fallback to sample data
+        function loadDatabase() {
+            const storedData = localStorage.getItem(DB_KEY);
+            console.log("Raw stored data:", storedData);
+
+            if (storedData) {
+                try {
+                    recipeDatabase = JSON.parse(storedData);
+                    console.log("Database loaded with", recipeDatabase.length, "recipes");
+                } catch (e) {
+                    console.error("Error loading database:", e);
+                    recipeDatabase = [];
+                }
+            }
+
+            // Use sample data if database is empty
+            if (recipeDatabase.length === 0) {
+                console.log("Using sample recipes as fallback");
+                recipeDatabase = SAMPLE_RECIPES;
+                saveDatabase(); // Save sample data to localStorage
+            }
+
+            // Validate each recipe to ensure required fields
+            recipeDatabase = recipeDatabase.filter(recipe => {
+                if (!recipe || !recipe.id || !recipe.title) {
+                    console.warn("Removing invalid recipe:", recipe);
+                    return false;
+                }
+
+                // Ensure ingredients is an array
+                if (!Array.isArray(recipe.ingredients)) {
+                    recipe.ingredients = recipe.ingredients ?
+                        recipe.ingredients.split(',').map(i => i.trim()) : [];
+                }
+
+                // Ensure ner is an array
+                if (!Array.isArray(recipe.ner)) {
+                    recipe.ner = recipe.ner ?
+                        recipe.ner.split(',').map(n => n.trim()) : [];
+                }
+
+                return true;
+            });
+
+            // Save the cleaned database
+            saveDatabase();
+        }
+
+        // Save database to localStorage
+        function saveDatabase() {
+            localStorage.setItem(DB_KEY, JSON.stringify(recipeDatabase));
+            console.log("Database saved with", recipeDatabase.length, "recipes");
+        }
+
+        // Function to extract Named Entity Recognition (simplified)
+        function extractNER(text) {
+            // This is a simplified NER implementation
+            // In a real application, you'd use a proper NLP library
+            const entities = [];
+
+            // Look for food items (expanded list)
+            const commonFoods = [
+                "chicken", "beef", "pork", "fish", "pasta", "rice", "carrot", "onion",
+                "garlic", "tomato", "potato", "lettuce", "cheese", "butter", "egg",
+                "milk", "cream", "sugar", "flour", "oil", "salt", "pepper", "chocolate",
+                "vanilla", "cinnamon", "apple", "banana", "orange", "lemon", "lime",
+                "berries", "mushroom", "corn", "peas", "bacon", "sausage", "sour cream",
+                "yogurt", "honey", "syrup", "bread", "crackers", "sauce", "vinegar",
+                "mustard", "ketchup", "mayonnaise", "herbs", "spices", "broth", "stock"
+            ];
+
+            const words = text.toLowerCase().split(/\W+/);
+            words.forEach(word => {
+                if (commonFoods.includes(word)) {
+                    entities.push(word);
+                }
+            });
+
+            // Look for cooking methods
+            const cookingMethods = [
+                "bake", "boil", "broil", "fry", "grill", "roast", "saute", "simmer",
+                "steam", "stir", "whisk", "chop", "dice", "mince", "slice", "mix"
+            ];
+
+            words.forEach(word => {
+                if (cookingMethods.includes(word)) {
+                    entities.push(word);
+                }
+            });
+
+            return [...new Set(entities)]; // Remove duplicates
+        }
+
+        // Add recipe to database
+        function addRecipe() {
+            const title = document.getElementById('title').value.trim();
+            const ingredients = document.getElementById('ingredients').value.trim();
+            const directions = document.getElementById('directions').value.trim();
+            const link = document.getElementById('link').value.trim();
+            const site = document.getElementById('site').value.trim();
+
+            if (!title || !ingredients || !directions) {
+                alert("Please fill in all required fields (title, ingredients, directions)");
+                return;
+            }
+
+            // Extract NER from ingredients and directions
+            const ingredientsList = ingredients.split(',').map(item => item.trim());
+            const ner = extractNER(ingredients + ' ' + directions);
+
+            const recipe = {
+                id: Date.now().toString(),
+                title,
+                ingredients: ingredientsList,
+                directions,
+                link,
+                site,
+                ner,
+                date: new Date().toISOString()
+            };
+
+            // Add to database
+            recipeDatabase.push(recipe);
+            saveDatabase();
+
+            // Show success message
+            const successMsg = document.getElementById('success-add');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+
+            // Clear form
+            clearForm();
+
+            // Update all recipes view if it's visible
+            if (document.getElementById('view-recipes').classList.contains('active')) {
+                loadAllRecipes();
+            }
+
+            console.log("Recipe added:", recipe);
+        }
+
+        // Save database to Excel file - IMPROVED VERSION
+        function saveToExcel() {
+            // Make sure database is fully loaded before export
+            loadDatabase();
+
+            if (recipeDatabase.length === 0) {
+                alert("No recipes to export. Please add some recipes first!");
+                return;
+            }
+
+            try {
+                // Create workbook and worksheet
+                const wb = XLSX.utils.book_new();
+
+                // Format data properly for Excel
+                const data = [];
+
+                // Add header row
+                data.push({
+                    ID: "ID",
+                    Title: "Title",
+                    Ingredients: "Ingredients",
+                    Directions: "Directions",
+                    Link: "Link",
+                    Site: "Site",
+                    NER: "NER Tags",
+                    Date: "Creation Date"
+                });
+
+                // Add ALL recipe data rows
+                recipeDatabase.forEach(recipe => {
+                    data.push({
+                        ID: recipe.id,
+                        Title: recipe.title,
+                        Ingredients: Array.isArray(recipe.ingredients) ?
+                            recipe.ingredients.join('; ') : recipe.ingredients || "",
+                        Directions: recipe.directions || "",
+                        Link: recipe.link || "",
+                        Site: recipe.site || "",
+                        NER: Array.isArray(recipe.ner) ?
+                            recipe.ner.join('; ') : recipe.ner || "",
+                        Date: recipe.date ? new Date(recipe.date).toLocaleString() :
+                            new Date().toISOString()
+                    });
+                });
+
+                // Convert to worksheet
+                const ws = XLSX.utils.json_to_sheet(data);
+
+                // Set column widths for better readability
+                const wscols = [
+                    {wch: 15}, // ID
+                    {wch: 30}, // Title
+                    {wch: 40}, // Ingredients
+                    {wch: 50}, // Directions
+                    {wch: 30}, // Link
+                    {wch: 20}, // Site
+                    {wch: 30}, // NER
+                    {wch: 20}  // Date
+                ];
+                ws['!cols'] = wscols;
+
+                // Add to workbook and write file
+                XLSX.utils.book_append_sheet(wb, ws, "recipes");
+                XLSX.writeFile(wb, EXCEL_FILENAME);
+
+                alert("Recipes successfully exported to " + EXCEL_FILENAME);
+            } catch (error) {
+                console.error("Error exporting to Excel:", error);
+                alert("Error exporting recipes: " + error.message);
+            }
+        }
+
+        // Helper function to create and trigger file input for Excel import
+        function importExcelClick() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx, .xls';
+            fileInput.style.display = 'none';
+            fileInput.addEventListener('change', importFromExcel);
+            document.body.appendChild(fileInput);
+            fileInput.click();
+            document.body.removeChild(fileInput);
+        }
+
+        // Import recipes from Excel file
+        function importFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+
+                    // Get first worksheet
+                    const worksheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[worksheetName];
+
+                    // Convert to JSON
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (jsonData.length === 0) {
+                        alert("No data found in Excel file.");
+                        return;
+                    }
+
+                    // Load existing database before import
+                    loadDatabase();
+
+                    // Process and add recipes to database
+                    let importCount = 0;
+                    jsonData.forEach((row, index) => {
+                        // Skip header row if present
+                        if (index === 0 && row.ID === "ID") return;
+
+                        // Check if this is a valid recipe row
+                        if (!row.Title) return;
+
+                        const recipe = {
+                            id: row.ID || Date.now().toString() + index,
+                            title: row.Title,
+                            ingredients: row.Ingredients ? row.Ingredients.split(';').map(i => i.trim()) : [],
+                            directions: row.Directions || "",
+                            link: row.Link || "",
+                            site: row.Site || "",
+                            ner: row.NER ? row.NER.split(';').map(n => n.trim()) :
+                                  extractNER((row.Ingredients || "") + ' ' + (row.Directions || "")),
+                            date: row.Date ? new Date(row.Date).toISOString() : new Date().toISOString()
+                        };
+
+                        // Check if recipe with same ID already exists
+                        const existingIndex = recipeDatabase.findIndex(r => r.id === recipe.id);
+                        if (existingIndex >= 0) {
+                            recipeDatabase[existingIndex] = recipe; // Update existing
+                        } else {
+                            recipeDatabase.push(recipe); // Add new
+                        }
+                        importCount++;
+                    });
+
+                    // Save database and update UI
+                    saveDatabase();
+                    loadAllRecipes();
+
+                    alert(`Successfully imported ${importCount} recipes from Excel file.`);
+                } catch (error) {
+                    console.error("Error importing Excel file:", error);
+                    alert("Error importing Excel file: " + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+
+            // Reset file input
+            event.target.value = "";
+        }
+
+        // Debug function to see current database contents
+        function debugDatabase() {
+            console.log("Current recipe database:", recipeDatabase);
+            alert(`Database contains ${recipeDatabase.length} recipes. Check browser console for details.`);
+        }
+
+        // Clear the add recipe form
+        function clearForm() {
+            document.getElementById('title').value = '';
+            document.getElementById('ingredients').value = '';
+            document.getElementById('directions').value = '';
+            document.getElementById('link').value = '';
+            document.getElementById('site').value = '';
+            updatePreview();
+        }
+
+        // Search recipes based on input
+        function searchRecipes(query) {
+            // Clear autocomplete list if query is empty
+            if (!query) {
+                document.getElementById('autocomplete-list').innerHTML = '';
+                document.getElementById('search-results').innerHTML = '<p><em>Search for a recipe to view sharing options...</em></p>';
+                updateRecommendations([]);
+                return;
+            }
+
+            query = query.toLowerCase();
+            const matches = recipeDatabase.filter(recipe =>
+                recipe.title.toLowerCase().includes(query)
+            );
+
+            // Show autocomplete suggestions
+            const autocompleteList = document.getElementById('autocomplete-list');
+            autocompleteList.innerHTML = '';
+
+            matches.slice(0, 5).forEach(recipe => {
+                const div = document.createElement('div');
+                div.innerHTML = recipe.title;
+                div.onclick = function() {
+                    document.getElementById('search-recipe').value = recipe.title;
+                    autocompleteList.innerHTML = '';
+                    displayRecipeById(recipe.id);
+                };
+                autocompleteList.appendChild(div);
+            });
+
+            // If no matches, show message
+            if (matches.length === 0) {
+                document.getElementById('search-results').innerHTML = '<p><em>No recipes found matching your search.</em></p>';
+                updateRecommendations([]);
+            }
+        }
+
+        // Display recipe by ID
+        function displayRecipeById(recipeId) {
+            const recipe = recipeDatabase.find(r => r.id === recipeId);
+            if (!recipe) {
+                console.error("Recipe not found with ID:", recipeId);
+                return;
+            }
+            displayRecipeForSharing(recipe);
+
+            // Find similar recipes for recommendations
+            const similarRecipes = findSimilarRecipes(recipe);
+            updateRecommendations(similarRecipes);
+        }
+
+        // Find similar recipes for recommendations
+        function findSimilarRecipes(recipe) {
+            if (!recipe || !recipe.ner || recipe.ner.length === 0) {
+                return [];
+            }
+
+            // Find recipes with similar ingredients or NER tags
+            const similar = recipeDatabase.filter(r => {
+                if (r.id === recipe.id) return false; // Skip the current recipe
+
+                // Check for overlap in NER tags
+                const nerOverlap = Array.isArray(r.ner) && Array.isArray(recipe.ner) &&
+                    r.ner.some(tag => recipe.ner.includes(tag));
+
+                // Check for overlap in ingredients
+                const ingredientOverlap = Array.isArray(r.ingredients) && Array.isArray(recipe.ingredients) &&
+                    r.ingredients.some(ing =>
+                        recipe.ingredients.some(recipeIng => {
+                            const ingLower = ing.toLowerCase();
+                            const recipeIngLower = recipeIng.toLowerCase();
+                            return recipeIngLower.includes(ingLower) || ingLower.includes(recipeIngLower);
+                        })
+                    );
+
+                return nerOverlap || ingredientOverlap;
+            });
+
+            return similar.slice(0, 5); // Return top 5 similar recipes
+        }
+
+        // Update recommendations section
+        function updateRecommendations(recipes) {
+            const recommendationList = document.getElementById('recommendation-list');
+
+            if (!recipes || recipes.length === 0) {
+                recommendationList.innerHTML = '<p><em>No recommendations available</em></p>';
+                return;
+            }
+
+            let html = '';
+            recipes.forEach(recipe => {
+                html += `
+                    <div class="recommendation-item" onclick="displayRecipeById('${recipe.id}')">
+                        ${recipe.title}
+                    </div>
+                `;
+            });
+
+            recommendationList.innerHTML = html;
+        }
+
+        // Display recipe for sharing
+        function displayRecipeForSharing(recipe) {
+            const resultsDiv = document.getElementById('search-results');
+
+            let html = `
+                <div class="recipe-card">
+                    <h3>${recipe.title}</h3>
+                    <p><strong>Ingredients:</strong> ${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(', ') : recipe.ingredients}</p>
+                    <p><strong>Directions:</strong> ${recipe.directions}</p>
+                    ${recipe.link ? `<p><strong>Original Link:</strong> <a href="${recipe.link}" target="_blank">${recipe.link}</a></p>` : ''}
+                    <p><strong>Source:</strong> ${recipe.site || "Not specified"}</p>
+
+                    <button class="share-button" onclick="showSiteForSharing('${recipe.id}')">Share Recipe</button>
+                    <div id="site-link-${recipe.id}" class="site-link">
+                        <p>Share this recipe via:</p>
+                        <button class="share-option-button" onclick="shareViaEmail('${recipe.id}')">Email</button>
+                        <button class="share-option-button" onclick="shareViaCopy('${recipe.id}')">Copy to Clipboard</button>
+                        ${recipe.link ? `<p>Original recipe: <a href="${recipe.link}" target="_blank">${recipe.link}</a></p>` : ''}
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Show site for sharing
+        function showSiteForSharing(recipeId) {
+            // Extract the clean ID (removing 'view-' prefix if present)
+            const cleanId = recipeId.startsWith('view-') ? recipeId.substring(5) : recipeId;
+            const elementId = recipeId.startsWith('view-') ? recipeId : `view-${recipeId}`;
+
+            // Toggle display of sharing options
+            const siteLink = document.getElementById(`site-link-${recipeId}`);
+            if (siteLink) {
+                if (siteLink.style.display === 'block') {
+                    siteLink.style.display = 'none';
+                } else {
+                    siteLink.style.display = 'block';
+                }
+            } else {
+                console.error(`Site link element not found: site-link-${recipeId}`);
+            }
+        }
+
+        // Share via email
+        function shareViaEmail(recipeId) {
+            // Extract the clean ID (removing 'view-' prefix if present)
+            const cleanId = recipeId.startsWith('view-') ? recipeId.substring(5) : recipeId;
+            const recipe = recipeDatabase.find(r => r.id === cleanId);
+
+            if (!recipe) {
+                console.error("Recipe not found for sharing:", cleanId);
+                return;
+            }
+
+            const subject = `Recipe: ${recipe.title}`;
+            const body = `Check out this recipe for ${recipe.title}!\n\n` +
+                      `Ingredients: ${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(', ') : recipe.ingredients}\n\n` +
+                      `Directions: ${recipe.directions}\n\n` +
+                      `${recipe.link ? 'Original link: ' + recipe.link : ''}`;
+
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        // Copy to clipboard
+        function shareViaCopy(recipeId) {
+            // Extract the clean ID (removing 'view-' prefix if present)
+            const cleanId = recipeId.startsWith('view-') ? recipeId.substring(5) : recipeId;
+            const recipe = recipeDatabase.find(r => r.id === cleanId);
+
+            if (!recipe) {
+                console.error("Recipe not found for copying:", cleanId);
+                return;
+            }
+
+            const recipeText = `${recipe.title}\n\n` +
+                            `Ingredients: ${Array.isArray(recipe.ingredients) ? recipe.ingredients.join(', ') : recipe.ingredients}\n\n` +
+                            `Directions: ${recipe.directions}\n\n` +
+                            `${recipe.link ? 'Original link: ' + recipe.link : ''}`;
+
+            // Create temporary textarea to copy from
+            const textArea = document.createElement('textarea');
+            textArea.value = recipeText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            alert('Recipe copied to clipboard!');
+        }
+
+        // Update preview as user types
+        function updatePreview() {
+            const title = document.getElementById('title').value.trim();
+            const ingredients = document.getElementById('ingredients').value.trim();
+            const directions = document.getElementById('directions').value.trim();
+            const link = document.getElementById('link').value.trim();
+            const site = document.getElementById('site').value.trim();
+
+            let html = '<p><em>Recipe preview will appear here as you type...</em></p>';
+
+            if (title || ingredients || directions) {
+                html = `
+                    ${title ? `<h3>${title}</h3>` : ''}
+                    ${ingredients ? `<p><strong>Ingredients:</strong> ${ingredients}</p>` : ''}
+                    ${directions ? `<p><strong>Directions:</strong> ${directions}</p>` : ''}
+                    ${link ? `<p><strong>Original Link:</strong> ${link}</p>` : ''}
+                    ${site ? `<p><strong>Source:</strong> ${site}</p>` : ''}
+                `;
+            }
+
+            document.getElementById('preview-content').innerHTML = html;
+        }
+
+        // Load all recipes for viewing
+        function loadAllRecipes() {
+            const recipesDiv = document.getElementById('all-recipes');
+
+            // Ensure database is loaded
+            loadDatabase();
+
+            if (!recipeDatabase || recipeDatabase.length === 0) {
+                recipesDiv.innerHTML = '<p><em>No recipes found. Add some recipes first!</em></p>';
+                return;
+            }
+
+            let html = '';
+            recipeDatabase.forEach(recipe => {
+                if (!recipe || !recipe.title) {
+                    console.warn("Skipping invalid recipe entry:", recipe);
+                    return; // Skip invalid entries
+                }
+
+                // Ensure ingredients is always an array
+                const ingredients = Array.isArray(recipe.ingredients) ?
+                    recipe.ingredients.join(', ') :
+                    (recipe.ingredients || "None");
+
+                html += `
+                    <div class="recipe-card">
+                        <h3>${recipe.title || "Untitled Recipe"}</h3>
+                        <p><strong>Ingredients:</strong> ${ingredients}</p>
+                        <p><strong>Directions:</strong> ${recipe.directions || "No directions provided"}</p>
+                        ${recipe.link ? `<p><strong>Original Link:</strong> <a href="${recipe.link}" target="_blank">${recipe.link}</a></p>` : ''}
+                        <p><strong>Source:</strong> ${recipe.site || "Not specified"}</p>
+                        <button class="share-button" onclick="showSiteForSharing('view-${recipe.id}')">Share Recipe</button>
+                        <div id="site-link-view-${recipe.id}" class="site-link">
+                            <p>Share this recipe via:</p>
+                            <button class="share-option-button" onclick="shareViaEmail('view-${recipe.id}')">Email</button>
+                            <button class="share-option-button" onclick="shareViaCopy('view-${recipe.id}')">Copy to Clipboard</button>
+                            ${recipe.link ? `<p>Original recipe: <a href="${recipe.link}" target="_blank">${recipe.link}</a></p>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            recipesDiv.innerHTML = html;
+        }
+
+        // Tab functionality
+        function openTab(evt, tabName) {
+            // Hide all tab content
+            const tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+
+            // Remove active class from all tabs
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+
+            // Show the specific tab content
+            document.getElementById(tabName).classList.add("active");
+
+            // Add the active class to the button that opened the tab
+            evt.currentTarget.classList.add("active");
+
+            // If view recipes tab, load recipes
+            if (tabName === 'view-recipes') {
+                loadAllRecipes();
+            }
+        }
+
+        // Set up event listeners
+        window.onload = function() {
+            console.log("Application starting...");
+            loadDatabase();
+            console.log("Database loaded with", recipeDatabase.length, "recipes");
+
+            // Add input listeners for live preview
+            document.getElementById('title').addEventListener('input', updatePreview);
+            document.getElementById('ingredients').addEventListener('input', updatePreview);
+            document.getElementById('directions').addEventListener('input', updatePreview);
+            document.getElementById('link').addEventListener('input', updatePreview);
+            document.getElementById('site').addEventListener('input', updatePreview);
+
+            // Load recipes initially on first load
+            loadAllRecipes();
+        };
+    </script>
+</body>
+</html>

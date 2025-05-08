@@ -1,0 +1,62 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.title {
+  text-align: center;
+  color: #78350f; /* Amber-900 */
+  margin-bottom: 30px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.teamManagement {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.teamInput {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 200px;
+  color: #78350f; /* Amber-900 */
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: #a8a29e; /* Stone-400 */
+}
+
+.addButton {
+  padding: 8px 15px;
+  border: none;
+  background-color: #d97706; /* Amber-600 */
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.addButton:hover {
+  background-color: #b45309; /* Amber-700 */
+}
+
+.timersContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+} 

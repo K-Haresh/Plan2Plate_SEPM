@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `recipe` ADD COLUMN `rating` DOUBLE NULL DEFAULT 0,
+    ADD COLUMN `review` VARCHAR(191) NULL;

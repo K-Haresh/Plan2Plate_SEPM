@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <circle cx="400" cy="400" r="380" fill="#f3f4f6"/>
+        <g transform="translate(120, 120) scale(0.7)">
+            <path d="M400 100 C 280 100, 180 200, 180 320 C 180 440, 280 540, 400 540 C 520 540, 620 440, 620 320 C 620 200, 520 100, 400 100" fill="white" stroke="#1f2937" stroke-width="20"/>
+            <text x="400" y="350" font-family="Arial Black" font-size="80" text-anchor="middle" fill="#1f2937">P2P</text>
+            <g transform="translate(250, 250)">
+                <path d="M50 0 L150 300" stroke="#1f2937" stroke-width="20" stroke-linecap="round"/>
+                <path d="M250 0 L150 300" stroke="#1f2937" stroke-width="20" stroke-linecap="round"/>
+            </g>
+            <path d="M250 180 C 250 140, 350 140, 350 180" stroke="#047857" stroke-width="15" fill="none"/>
+            <path d="M450 180 C 450 140, 550 140, 550 180" stroke="#047857" stroke-width="15" fill="none"/>
+        </g>
+    </g>
+</svg> 
