@@ -6,7 +6,7 @@ Plan2Plate is a modern web application that helps you discover recipes, plan you
 - User Registration and Login: Create your account to continue from where you left off
 - Forgot Password: If you forget your password No worries!Get your reset link to your registered mail. 
 - Recipe Search: Find recipes based on ingredients you have
-- Upload and Share Recipe: Create your own recipes and share your innovation to the world.View yourrecipes in the profile section.
+- Upload and Share Recipe: Create your own recipes and share your innovation to the world.View your recipes in the profile section.
 - Meal Planner: Plan your meals for the week
 - Shopping List Generator: Get a comprehensive list of ingredients you need
 - Recipe of the Day: Get inspired with new recipes daily
