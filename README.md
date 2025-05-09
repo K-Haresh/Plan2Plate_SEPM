@@ -1,13 +1,19 @@
 # Plan2Plate
 
-Plan2Plate is a modern web application that helps you discover recipes, plan your meals, and generate shopping lists. Built with Next.js and TypeScript.
+Plan2Plate is a modern web application that helps you discover recipes, plan your meals, and generate shopping lists. Built with Next.js and TypeScript and Python.
 
 ## Features
-
+- User Registration and Login: Create your account to continue from where you left off
+- Forgot Password: If you forget your password No worries!Get your reset link to your registered mail. 
 - Recipe Search: Find recipes based on ingredients you have
+- Upload and Share Recipe: Create your own recipes and share your innovation to the world.View yourrecipes in the profile section.
 - Meal Planner: Plan your meals for the week
 - Shopping List Generator: Get a comprehensive list of ingredients you need
 - Recipe of the Day: Get inspired with new recipes daily
+- Save Favourite Recipes : Get to save your recipes and view them at your own convenience
+- Rate and Review: Rate the recipes from 1-5 stars and leave a personalized review .Your Feedback is important
+- Cooking Timer: Cooking timers to assist you during cooking. Create Multiple teams and timers for multiple teams to avoid hassle.
+  
 
 ## Getting Started
 
